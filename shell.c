@@ -20,8 +20,6 @@ int c2pout[2];           //child/parent io
 int c2perr[2];           //child/parent io
 int p2c[2];
 
-
-
 // Shell execution entry point
 int main(int argc, char** argv) {
 
@@ -40,8 +38,9 @@ int main(int argc, char** argv) {
     fd_set stdoutfd; // Set of output file descriptors
     int r, n;        // Syscall return variables   
 
-    //Run forever, will use break + SIGs
     /*
+     * This is our main loop which drives the shell
+     *  
      * Main Process: print shell line, wait for input
      * Child Process: fork, set up pipes, execve the python program
      *
@@ -51,16 +50,36 @@ int main(int argc, char** argv) {
      */
     while(1) {
         printf(">>>> ");
+
+        /* TODO  -  Nick
+         *
+         * Wait for user input
+         *
+         * Grab input (I think scanf() will work)
+         *
+         * If input = "help" printf a helpful message of sorts
+         *
+         * Otherwise we don't have any commands yet so just printf "invalid command"
+         *
+         * Go back to waiting (just continue the loop)
+         *
+         * */
+
         
         //First we need to handle the input command
-        //TODO: Listen for standard input
-        
 
+
+//Ignore this for now
+/* 
+ 
         FD_ZERO(&rfds);
         FD_SET(0, &rfds);
         FD_SET(child_stderr, 
 
+*/
 
+
+    
     }
 }
 
