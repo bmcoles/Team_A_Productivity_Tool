@@ -1,0 +1,82 @@
+/* Master TODO list for CS3141 Team A */
+/* Not comprehensive, will be updated periodically */
+
+In C (For Nick and Gabe):
+
+Get "shell" input working
+    1 Print shell lines
+    2 Wait for user to type in command and hit enter
+    3 Echo back the output and return to step 1
+
+Get System Calls and Non-Blocking IO Setup
+
+Get "help" text/tutorial system working:
+    There should be standardized help instructions for shell and specific command usage 
+
+Generate initialization module
+    On first startup of tool users should be prompted for config data.
+    What this is and how we handle it is TBD. 
+
+---------------------------------------------------------------------------------------
+
+In Python (Everyone Else):
+
+Figure out data storage:
+
+    We will be tracking a lot of different data points/types over time, so we need a storage format that will make it
+    easy to parse/access.
+
+    I think JSON would be the easiest format for the data. Python has JSON parsing libraries we could use. For
+    example, if we're tracking academic work hours we'd want to track hours worked, subject studied, and progress towards
+    goal. In JSON a single entry would be formatted as something like:
+
+    {
+        "hoursWorked" : 3,
+        "subject"     : "TSP",
+        "progress"    : "Sufficient"
+    }
+
+    There may be a better way to represent that specific example, but the main idea is that one data entry point will
+    contain several different fields. If we have hundreds of entries like the one above, JSON will make it easy to parse.
+
+    Any python module that outputs trackable data will need to adhere to this standard, so it may be easiest to have on
+    team member work on JSON I/O specifically.
+    
+    TODO:
+    1 Figure out how to export python data in JSON format (outputting to a .txt or .json file is fine)
+    2 Figure out how to import that JSON data into a python program
+    
+    For these you can use the example given above or come up with something else. It would be a good idea to make a loop
+    that generates hundreds of entries for testing purposes.
+
+
+Data Visualizations (Charts, Graphs, etc):
+    
+    We need a way to display our beautifully stored data graphically. Python has a lot of options in this regard
+    starting with matplotlib. The matplotlib library is easy enough to use and can make simple graphs. Off the top of my
+    head this is the only library I'm familiar with so this one is pretty open ended.
+
+    In the end we want real easy to read and good looking graphs, so this would be a good task for someone to dedicate
+    themselves to.
+
+    TODO:
+    1 Make some dummy data (or grab JSON data if we have it)
+    2 Play around with plotting the data in different ways (line chart, bar graph, etc.)
+    3 Figure out how to "beautify" simple graphs 
+
+
+// Gotta think about this section a lot more
+Modules:
+
+    Individual python files will be used to implement command line commands. These haven't been nailed down, so for now
+    we should begin to implement core functionality for time management, activity selection, and random project
+    selection.
+
+    TODO:
+    1 Generate a list of projects and randomly select one to be given as output
+    2 Figure out how to start/stop a timer in python
+    3 Figure out how to receive user input in python (I think this is just one builtin command) 
+
+
+This list is far from comprehensive, so feel free to add stuff as you go. There is also research to be done in
+optimizing/finding the most efficient way to accomplish these goals. 
