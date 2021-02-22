@@ -51,6 +51,25 @@ int main(int argc, char** argv) {
     while(1) {
         printf(">>>> ");
 
+	//Creates a location for a string input to be placed
+	char input[100];
+	
+	//Takes in user input. This function with scanf allows for spaces to be scanned in addition to normal input
+	scanf("%[^\n]%*c", input);
+	
+	//Checks to see if the input is a premade command. If it is, it outputs what is requested. Otherwise, for now, it prints an error message
+	if(!strcmp(input, "help") || !strcmp(input, "Help"))
+	{
+		printf("A helpful message of sorts\n\n");
+	}
+	else if(!strcmp(input, "tutorials") || !strcmp(input, "Tutorials"))
+	{
+		printf("This is a tutorial\n\n");
+	}
+	else
+	{
+		printf("Invalid command\n\n");
+	}
         /* TODO  -  Nick
          *
          * Wait for user input
