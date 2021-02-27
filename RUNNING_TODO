@@ -1,7 +1,7 @@
 /* Master TODO list for CS3141 Team A */
 /* Not comprehensive, will be updated periodically */
 
-In C (For Nick and Gabe):
+In C:
 
 Get "shell" input working
     1 Print shell lines
@@ -17,9 +17,25 @@ Generate initialization module
     On first startup of tool users should be prompted for config data.
     What this is and how we handle it is TBD. 
 
+Figure out how to handle state based flow:
+    I.e. when there is a process executing, handle whether or not it needs to block 
+    I/O to the rest of the shell.
+
+    How do we handle timeouts to ensure our shell doesn't hang?
+    How do we save the shell state of a most recent session?
+    What do we do with data collected by modules when a session is terminated mid-run?
+
+Set up testing infrastructure:
+    Begin tracking stack/heap usage once the program begins running to monitor system resources
+    Write a master suite of unit tests which: 
+        Test relevant combinations of modules
+        Run test suites attached to each individual python module
+        fork/exec/return in different ways along with
+        Run these tests each time new code is pushed to github to ensure it doesn't break our tool
+
 ---------------------------------------------------------------------------------------
 
-In Python (Everyone Else):
+In Python:
 
 Figure out data storage:
 
@@ -78,5 +94,39 @@ Modules:
     3 Figure out how to receive user input in python (I think this is just one builtin command) 
 
 
+Testing Infrastructure:
+
+    Each module will need to be tested for individual functionality against edge cases (idk what those will look like)
+    Each module will need an automated test suite attached to it which will be run as part of a master test suite
+    (Flex but would be cool) Everytime new code is pushed to github it must run against these tests
+
+
+Object Oriented Design:
+
+    Python can effectively implement object oriented designs which I believe is the best way to handle our data's
+    polymorphism. We will be tracking both system and user defined types of data which will share many baseline
+    characteristics such as: 
+        - Time Tracking variables
+        - Efficiency/Performance Tracking Variables
+        - Initialization Data
+        - Storage Methods
+        - General Structure
+        - etc etc
+
+    In order to support this a few general data templates will be offered to the user. These can all stem from a generic
+    "Data_Entry" class and be related to one another.
+
+    I haven't done any OOP since Data Structures a few years back, so I can't get much more specific than this.
+   
+    TODO:
+    **One big chunk of work will be designing this system (UML/Class diagram?) and implementing it in Python
+
+ -------------------------------------------------------------------------------------------------------
 This list is far from comprehensive, so feel free to add stuff as you go. There is also research to be done in
 optimizing/finding the most efficient way to accomplish these goals. 
+
+=============================
+Considerations Moving Forward
+=============================
+
+Is there a more efficient way to structure our code to make it modular than OOP?
