@@ -20,6 +20,9 @@ int c2pout[2];           //child/parent io
 int c2perr[2];           //child/parent io
 int p2c[2];
 
+// TODO: We need two tables which hold the C-based commands and one which
+// holds valid python module commands. Best way to store? Array of Structs?
+
 // Shell execution entry point
 int main(int argc, char** argv) {
 
@@ -51,56 +54,136 @@ int main(int argc, char** argv) {
     while(1) {
         printf(">>>> ");
 
-	//Creates a location for a string input to be placed
-	char input[100];
-	
-	//Takes in user input. This function with scanf allows for spaces to be scanned in addition to normal input
-	scanf("%[^\n]%*c", input);
-	
-	//Checks to see if the input is a premade command. If it is, it outputs what is requested. Otherwise, for now, it prints an error message
-	if(!strcmp(input, "help") || !strcmp(input, "Help"))
-	{
-		printf("A helpful message of sorts\n\n");
-	}
-	else if(!strcmp(input, "tutorials") || !strcmp(input, "Tutorials"))
-	{
-		printf("This is a tutorial\n\n");
-	}
-	else
-	{
-		printf("Invalid command\n\n");
-	}
-        /* TODO  -  Nick
-         *
-         * Wait for user input
-         *
-         * Grab input (I think scanf() will work)
-         *
-         * If input = "help" printf a helpful message of sorts
-         *
-         * Otherwise we don't have any commands yet so just printf "invalid command"
-         *
-         * Go back to waiting (just continue the loop)
-         *
-         * */
-
+        //Creates a location for a string input to be placed
+        char input[100];
         
-        //First we need to handle the input command
+        //Takes in user input. This function with scanf allows for spaces to be scanned in addition to normal input
+        scanf("%[^\n]%*c", input);
+        
+        //Checks to see if the input is a premade command. If it is, it outputs what is requested. Otherwise, for now, it prints an error message
+        //
+        //TODO: A list of strcmps isn't optimal, we're gonna keep a master command table
+        //then we just need one check to see if it's valid. The way every command is handled
+        //by the forked process is exactly the same.
+        if(!strcmp(input, "help") || !strcmp(input, "Help"))
+        {
+            printf("A helpful message of sorts\n\n");
+            continue;
+        }
+        else if(!strcmp(input, "tutorials") || !strcmp(input, "Tutorials"))
+        {
+            printf("This is a tutorial\n\n");
+            continue;
+        }
+        else
+        {
+            printf("Invalid command\n\n");
+            continue;
+        }
+        
+        // Use named pipes?
+        //
+        // //C defined instructions, check the master C command table
+        /* if (validInternal)
+         
+         * //Python Modules, check the master Python Module command table
+         * else if (validExternal)
+         *     if (childPID == 0) {
+         
+         *          close(c2pout[0]); close(c2perr[0]); close(p2c[1]);
+         *          dup2(p2c[0], STDIN_FILENO);
+                    dup2(c2pout[1], STDOUT_FILENO);
+                    dup2(c2perr[1], STDERR_FILENO);
+                    close(c2pout[1]);
+                    close(c2perr[1]);
+                    close(p2c[0]);
 
+                    //This should be calling exec
+                    child_process(argc, argv);
+                    printf("post child something happend\n");
+                    perror("exec");
+                    exit(-1);
 
-//Ignore this for now
-/* 
- 
-        FD_ZERO(&rfds);
-        FD_SET(0, &rfds);
-        FD_SET(child_stderr, 
-
-*/
-
-
+         *     }
+         *     else {
+         *         close(c2pout[1]); close(p2c[0]);
+         *          
+         *         main_process(argc, argv);
+         *         // After this function returns the pipes must be closed
+         *         // and buffers must be cleared
+         *         reset();
+         *         continue;
+         *
+         *     }
+         */
     
     }
 }
+
+void main_process(int argc, char* argv[]) {
+    char buf[100];  //Read buffer
+    fd_set rfds;    //Set of read-from file descriptors
+    fd_set stdoutfd;//Needed for nested select
+    int r;          //select() return value
+    int n;          //read() return value
+    //printf("I am the main process\n");
+
+    child_stdout = c2pout[0];
+    child_stderr = c2perr[0];
+    while(1) {
+       //TODO: Figure out when child process is done executing so we can return from this
+       //function and close all pipes and reset. Call a close and reset function? Probably.
+
+       FD_ZERO(&rfds);
+
+       //Main process reads from stdin, child_stdout, child_stderr
+       //Add stdin and child_stderr to rfds in all modes
+       FD_SET(0, &rfds);
+       FD_SET(child_stderr, &rfds);
+
+       r = select(highest_desc + 1, &rfds, 0, 0, NULL);
+       //printf("select has unblocked\n");
+
+       if(FD_ISSET(0, &rfds)) {
+           //Input waiting on stdin
+           n = read(0, buf, sizeof(buf));
+
+           //Write to child stdin
+           write(p2c[1], buf, n);
+       }
+
+       //Child has written something to its stdout
+       //Will only ever trigger here in I/O mode
+       if(FD_ISSET(child_stderr, &rfds)) {
+           char ch;
+           while(read(child_stderr, &ch, 1) == 1) {
+               write(2, &ch, 1);
+           }
+       }
+    }
+}
+
+/*
+ *  Generic driver for python module execution
+ */
+void child_process(int argc, char* argv[]) {
+    char buf[64];
+    char* cmd[argc];
+    
+    //Format the command for execvp
+    for(int i = 0; i <= argc; i++) {
+        if(i+1 == argc) {
+            cmd[i] = NULL;
+            break;
+        }
+        cmd[i] = argv[i+1];
+    }
+
+    execvp(cmd[0], cmd);
+    //If this is reached, execvp didn't run properly
+    exit(0);
+}
+
 
 
 //TODO: Think about modularity, don't dump a bunch of code in main
@@ -108,3 +191,5 @@ int main(int argc, char** argv) {
 //      Figure out how to re-fork after closing a child process
 //
 
+
+// From here on functions should be defined for handling each C-based command (help, tutorial, etc)
