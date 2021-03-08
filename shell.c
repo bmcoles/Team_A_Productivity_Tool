@@ -20,6 +20,13 @@ int c2pout[2];           //child/parent io
 int c2perr[2];           //child/parent io
 int p2c[2];
 
+struct Node //Nodes used for the command table
+{
+    char* command;
+    char* display;
+    struct Node* next; 
+};
+
 // TODO: We need two tables which hold the C-based commands and one which
 // holds valid python module commands. Best way to store? Array of Structs?
 
@@ -41,6 +48,28 @@ int main(int argc, char** argv) {
     fd_set stdoutfd; // Set of output file descriptors
     int r, n;        // Syscall return variables   
 
+    //Sets up Nodes used for the table of commands
+    struct Node* first = NULL; //Initallizes the Nodes
+    struct Node* second = NULL;
+    struct Node* end = NULL;
+    
+    first = (struct Node*) malloc(sizeof(struct Node)); //Gives them space
+    second = (struct Node*) malloc(sizeof(struct Node));
+    end = (struct Node*) malloc(sizeof(struct Node));
+    
+    //Sets up each node with a command that will be checked against, the output that goes with each command, and links the nodes
+    first->command = "help\0";
+    first->display = "A helpful message of sorts\n\n\0";
+    first->next = second;
+    
+    second->command = "tutorials\0";
+    second->display = "This is a tutorial\n\n\0";
+    second->next = end;
+    
+    //This node is the last one, and if it is reached, the command was invalid
+    end->command = NULL;
+    end->display = "Invalid Command\n\n\0";
+    end->next = NULL;
     /*
      * This is our main loop which drives the shell
      *  
@@ -61,25 +90,34 @@ int main(int argc, char** argv) {
         scanf("%[^\n]%*c", input);
         
         //Checks to see if the input is a premade command. If it is, it outputs what is requested. Otherwise, for now, it prints an error message
-        //
-        //TODO: A list of strcmps isn't optimal, we're gonna keep a master command table
-        //then we just need one check to see if it's valid. The way every command is handled
-        //by the forked process is exactly the same.
-        if(!strcmp(input, "help") || !strcmp(input, "Help"))
+        
+        //Starts by making the typed command all lowercase for comparisons
+        for(int i = 0; input[i] != '\0'; i++)
         {
-            printf("A helpful message of sorts\n\n");
-            continue;
+            if(input[i] >= 'A' && input[i] <= 'Z')
+            {
+                input[i] = input[i] + 32;
+            }
         }
-        else if(!strcmp(input, "tutorials") || !strcmp(input, "Tutorials"))
+        
+        //Starts from the first command, checks to see if the typed command matches any command listed.
+        struct Node* n = first;
+        while(n != NULL)
         {
-            printf("This is a tutorial\n\n");
-            continue;
+            //If either the last node is checked, which means the command does not exist, or a command is found, prints out what should be printed
+            if(n->next == NULL || !strcmp(input, n->command))
+            {
+                printf("%s", n->display);
+                break;
+            }
+            
+            //Otherwise, moves on
+            else
+            {
+            	n = n->next;
+            }
         }
-        else
-        {
-            printf("Invalid command\n\n");
-            continue;
-        }
+        
         
         // Use named pipes?
         //
