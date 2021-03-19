@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 int child_stdin;         //child will read from this
 int child_stdout;        //write to this
@@ -16,19 +17,17 @@ int child_stderr;        //and this
 int highest_desc = 0;    //Current highest descriptor number, needed for select() arg
 int pid;                 //Child process ID
 int more = 0;            //more flag
-int c2pout[2];           //child/parent io
-int c2perr[2];           //child/parent io
+int c2pout[2];
+int c2perr[2];
 int p2c[2];
 
 struct Node //Nodes used for the command table
 {
-    char* command;
-    char* display;
+    char*  command;     //Command String
+    char*  display;     //Help Text
+    bool   internal;    //Determine if C function or python module
     struct Node* next; 
 };
-
-// TODO: We need two tables which hold the C-based commands and one which
-// holds valid python module commands. Best way to store? Array of Structs?
 
 // Shell execution entry point
 int main(int argc, char** argv) {
@@ -37,16 +36,6 @@ int main(int argc, char** argv) {
     printf("Type \'tutorials\' for user guides\n");
     printf("Type \'help\' for usage\n\n");
     
-    // Create process communication pipes
-    pipe(c2pout);
-    pipe(p2c);
-    
-    highest_desc = p2c[1];
-
-    // Set up I/O control variables
-    fd_set rfds;     // Set of read file descriptors
-    fd_set stdoutfd; // Set of output file descriptors
-    int r, n;        // Syscall return variables   
 
     //Sets up Nodes used for the table of commands
     struct Node* first = NULL; //Initallizes the Nodes
@@ -117,45 +106,67 @@ int main(int argc, char** argv) {
             	n = n->next;
             }
         }
-        
-        
-        // Use named pipes?
-        //
-        // //C defined instructions, check the master C command table
-        /* if (validInternal)
-         
-         * //Python Modules, check the master Python Module command table
-         * else if (validExternal)
-         *     if (childPID == 0) {
-         
-         *          close(c2pout[0]); close(c2perr[0]); close(p2c[1]);
-         *          dup2(p2c[0], STDIN_FILENO);
-                    dup2(c2pout[1], STDOUT_FILENO);
-                    dup2(c2perr[1], STDERR_FILENO);
-                    close(c2pout[1]);
-                    close(c2perr[1]);
-                    close(p2c[0]);
-
-                    //This should be calling exec
-                    child_process(argc, argv);
-                    printf("post child something happend\n");
-                    perror("exec");
-                    exit(-1);
-
-         *     }
-         *     else {
-         *         close(c2pout[1]); close(p2c[0]);
-         *          
-         *         main_process(argc, argv);
-         *         // After this function returns the pipes must be closed
-         *         // and buffers must be cleared
-         *         reset();
-         *         continue;
-         *
-         *     }
-         */
-    
     }
+}
+
+/*
+ *  Call the correct function based on command name
+ */
+void call_internal(char* command) {
+    //    switch(command):
+    //        case "help"
+}
+
+
+void entry_point(int argc, char* argv[], struct Node* cmd) {
+
+    if (cmd->internal)
+        call_internal(cmd->command);
+     
+    //Python Modules, need process forking
+    else {
+
+        // Create process communication pipes
+        pipe(c2pout);
+        pipe(p2c);
+        pipe(c2perr);
+
+        //TODO: Set up non-blocking I/O flow control
+        /*   highest_desc = p2c[1];
+
+           // Set up I/O control variables
+           fd_set rfds;     // Set of read file descriptors
+           fd_set stdoutfd; // Set of output file descriptors
+           int r, n;        // Syscall return variables  
+        */
+        int childPID = fork();
+        if (childPID == 0) {
+             //Pipe Communication Setup 
+             close(c2pout[0]); close(c2perr[0]); close(p2c[1]);
+             dup2(p2c[0], STDIN_FILENO);
+             dup2(c2pout[1], STDOUT_FILENO);
+             dup2(c2perr[1], STDERR_FILENO);
+             close(c2pout[1]);
+             close(c2perr[1]);
+             close(p2c[0]);
+
+             child_process(argc, argv);
+             printf("post child something happend\n");
+             perror("exec");
+             exit(-1);
+
+        }
+        else {
+            close(c2pout[1]); close(p2c[0]);
+             
+            main_process(argc, argv);
+            // After this function returns the pipes must be closed
+            // and buffers must be cleared
+            // reset();
+    
+        }
+    }
+        
 }
 
 void main_process(int argc, char* argv[]) {
@@ -221,8 +232,6 @@ void child_process(int argc, char* argv[]) {
     //If this is reached, execvp didn't run properly
     exit(0);
 }
-
-
 
 //TODO: Think about modularity, don't dump a bunch of code in main
 //      Figure out how to close a child and disassociate all pipes after execution
