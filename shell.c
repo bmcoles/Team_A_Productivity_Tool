@@ -1,5 +1,6 @@
 //Some of these are unecessary as of now
 //Will likely be used later, though
+#include "shell.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -21,14 +22,14 @@ int c2pout[2];
 int c2perr[2];
 int p2c[2];
 
-struct Node //Nodes used for the command table
+/*struct Node //Nodes used for the command table
 {
     char*  command;     //Command String
     char*  display;     //Help Text
     bool   internal;    //Determine if C function or python module
     struct Node* next; 
 };
-
+*/
 // Shell execution entry point
 int main(int argc, char** argv) {
 
