@@ -1,0 +1,18 @@
+The python modules will be taking input as if it is passed in via the command line. If your module expects dynamic input
+from the C shell, you can test module functionality by passing in command line arguments.
+
+We'll need to decide what to support in terms of data requests for graphs, logs, etc. In other words, what specific 
+commmand line arguments our shell will feed these programs to produce desired results. 
+
+For now it's a good idea to choose one concept, which I suggest be fitness tracking, to work our examples around. One
+example of this we can implement as a test run is as follows:
+
+    Handle user input such as ">> graph weight 5d" could produce a graph of all weight attributes entered
+    in the last five days. The weight attribute is something we should be able to grab from all JSON entries over the
+    given time period.
+
+As far as our GUI goes, we should begin interfacing the user field entries with our other modules. Following the same
+example given above, the GUI could have a button for graph, an entry field for attribute name (in this case "weight"),
+and an entry field for time range. This could be fed in to our graph module which would output the desired graph. A good
+first step for this would be getting the user input entry fields printing out correctly after being entered. Simply
+echoing back the options the user selected.
