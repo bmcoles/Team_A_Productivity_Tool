@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <time.h>
 
 int child_stdin;         //child will read from this
 int child_stdout;        //write to this
@@ -21,40 +22,45 @@ int more = 0;            //more flag
 int c2pout[2];
 int c2perr[2];
 int p2c[2];
+time_t t;
 
-/*struct Node //Nodes used for the command table
+const long int * getTime()
 {
-    char*  command;     //Command String
-    char*  display;     //Help Text
-    bool   internal;    //Determine if C function or python module
-    struct Node* next; 
-};
-*/
+	t = time(NULL);
+	return &t;
+}
+
+
 // Shell execution entry point
 int main(int argc, char** argv) {
 
     printf("Welcome to Productivity Shell Version 0.0.0.0.0.0.0.1\n");
     printf("Type \'tutorials\' for user guides\n");
     printf("Type \'help\' for usage\n\n");
-    
 
     //Sets up Nodes used for the table of commands
     struct Node* first = NULL; //Initallizes the Nodes
     struct Node* second = NULL;
+    struct Node* third = NULL;
     struct Node* end = NULL;
     
     first = (struct Node*) malloc(sizeof(struct Node)); //Gives them space
     second = (struct Node*) malloc(sizeof(struct Node));
+    third = (struct Node*) malloc(sizeof(struct Node));
     end = (struct Node*) malloc(sizeof(struct Node));
     
     //Sets up each node with a command that will be checked against, the output that goes with each command, and links the nodes
     first->command = "help\0";
-    first->display = "A helpful message of sorts\n\n\0";
+    first->display = "If you want to get the date and time, type 'time'\n\n\0";
     first->next = second;
     
     second->command = "tutorials\0";
-    second->display = "This is a tutorial\n\n\0";
-    second->next = end;
+    second->display = "Type Ctrl + C to close out of the tool\n\n\0";
+    second->next = third;
+    
+    third->command = "time\0";
+    third->display = NULL;
+    third->next = end;
     
     //This node is the last one, and if it is reached, the command was invalid
     end->command = NULL;
@@ -97,6 +103,10 @@ int main(int argc, char** argv) {
             //If either the last node is checked, which means the command does not exist, or a command is found, prints out what should be printed
             if(n->next == NULL || !strcmp(input, n->command))
             {
+                char temp[256];
+                strcpy(temp, "The current time is ");
+                third->display = strcat(temp, asctime(localtime(getTime())));
+                third->display = strcat(temp, "\n");
                 printf("%s", n->display);
                 break;
             }

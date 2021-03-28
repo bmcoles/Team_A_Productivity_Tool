@@ -11,7 +11,7 @@ struct Node//Nodes used for the command table
     struct Node* next; 
 };
 
-
+const long int * getTime();
 int main(int argc, char** argv);
 void call_internal(char* command);
 void entry_point(int argc, char* argv[], struct Node* cmd);
