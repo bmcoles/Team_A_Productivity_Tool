@@ -3,10 +3,11 @@
 # The purpose of this is to track the progress of all tasks and store information for them for later use
 # Authored by Brennan Coles,
 
-# TODO - Get program integrated with c shell instead of standing alone
-# TODO - Decide how to handle file processing after merging with the c program
+# TODO - handle file processing to work with user profiles
+# TODO - Clean up code and add better and more descriptive comments
 
 import json
+import os
 
 option = 'n'  # Used extensively for the user input
 search = 'n'  # Used later for the search feature
@@ -16,7 +17,18 @@ while option != 'r' and option != 'w':  # Loop guarantees only valid input is ac
 
 while option == 'r' or option == 'w':  # Loop runs only while the user specifies to read and write
     if option == 'r':  # read option
-        readData = json.load(open('C:\\Users\\hyper\\Documents\\data.json'))  # CHANGE LATER
+        checker = 'TRUE'
+        while checker == 'TRUE':
+            try:
+                # This 'toRead' will be adjusted to work with the user's profile later
+                toRead = input("Enter the full filepath with filename for the file you would like to read: ")
+                # C:\\Users\\hyper\\Documents\\data.json
+                readData = json.load(open(toRead))
+                checker = 'FALSE'
+            except IOError:
+                print("That file was not found. Please try again.")
+                checker = 'TRUE'
+
         while option != 'a' and option != 's':  # Determines how you read
             option = input("Type a to see all entries or s to search for a specific task: ")
         if option == 'a':  # All entries
@@ -50,22 +62,48 @@ while option == 'r' or option == 'w':  # Loop runs only while the user specifies
         option = input("Type w to write to a file, r to read another file, or any other value to quit: ")
 
     if option == 'w':  # Write option
+        checker = 'TRUE'
         toAdd = 'g'
         data = {}
         # The purpose of this loop is to take input from the user to set up and create a .json file of their tasks
         while option != 'n' and option != 'o':
             option = input("Type n to write to a new file or o to append to an old file: ")
+
         if option == 'n':
+            checker = 'TRUE'
             while toAdd != 'q':
                 task = input("Enter the task name: ")
                 timeFrame = input("Enter the time frame to complete this task: ")
                 data[task] = timeFrame
                 toAdd = input("Enter q to quit or any other value to continue: ")
-            with open('C:\\Users\\hyper\\Documents\\data.json', 'w') as outfile:
+
+            while checker == 'TRUE':
+                toWrite = input("Enter the full filepath (with no filename) for the location you would like to write to: ")
+                if os.path.exists(toWrite)==True:
+                    checker = 'FALSE'
+                else:
+                    print("That location is invalid. Try again.")
+
+            toWrite2 = input("Enter the name of the file to create including the .json at the end: ")
+            toWrite3 = toWrite+toWrite2
+            with open(toWrite3, 'w') as outfile:
                 json.dump(data, outfile)
-        if option == 'o':
+
+
+        if option=='o':
             # Loop sets all values currently in readData into data before adding new values to data
             # Runs in O(n) time complexity
+            checker = 'TRUE'
+            while checker=='TRUE':
+                try:
+                    toAppend = input("Enter the full filepath with filename for the file you would like to append: ")
+                    # C:\\Users\\hyper\\Documents\\data.json
+                    readData = json.load(open(toAppend))
+                    checker = 'FALSE'
+                except IOError:
+                    print("That file was not found. Please try again.")
+                    checker = 'TRUE'
+
             for i in readData:
                 data[i] = readData[i]
             while toAdd != 'q':
@@ -73,6 +111,6 @@ while option == 'r' or option == 'w':  # Loop runs only while the user specifies
                 timeFrame = input("Enter the time frame to complete this task: ")
                 data[task] = timeFrame
                 toAdd = input("Enter q to quit or any other value to continue: ")
-            with open('C:\\Users\\hyper\\Documents\\data.json', 'w') as outfile:
+            with open(toAppend, 'w') as outfile:
                 json.dump(data, outfile)
         option = input("Type w to write to another file, r to read a file, or any other value to quit: ")
