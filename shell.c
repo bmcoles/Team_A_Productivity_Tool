@@ -72,6 +72,24 @@ void pomodoro()
     } 
 }
 
+/*
+ *  Take in shell input and format it correctly for execvp system call
+ */
+void  format(char *input, char **cmd) {
+
+     while (*input != '\0') {    
+          while (*input == ' ' || *input == '\t' || *input == '\n')
+               *input++ = '\0';
+          *cmd++ = input;
+          while (*input != '\0' && *input != ' ' && 
+                 *input != '\t' && *input != '\n') 
+               input++;
+     }
+     *cmd = '\0';
+}
+
+
+
 // Shell execution entry point
 int main(int argc, char** argv) {
 
@@ -80,7 +98,6 @@ int main(int argc, char** argv) {
     printf("Type \'help\' for usage\n");
     printf("Type \'time\' for the current date and time\n");
     printf("Type \'pomodoro\' to utilize the pomodoro timer\n\n");
-    printf(">>>> ");
 
     //Sets up Nodes used for the table of commands
     struct Node* first = NULL; //Initallizes the Nodes
@@ -128,14 +145,23 @@ int main(int argc, char** argv) {
      */
     while(1) {
 
+        printf(">>>> ");
         //Creates a location for a string input to be placed
         char input[100] = "\0";
         
         //Takes in user input. This function with scanf allows for spaces to be scanned in addition to normal input
-        fgets(input, 101, stdin);
+        fgets(input, 99, stdin);
         
-        //Checks to see if the input is a premade command. If it is, it outputs what is requested. Otherwise, for now, it prints an error message
-        
+        //Checks to see if the input is for a python module
+        //TODO: Replace this with check for external command names
+        char* check = strtok(input, " ");
+        if(!strcmp(check, "python3")) {
+            char* cmd[128];
+            format(input, cmd);
+            entry_point(cmd);
+            continue;
+        }
+
         //Starts by making the typed command all lowercase for comparisons
         for(int i = 0; input[i] != '\0'; i++)
         {
@@ -144,7 +170,9 @@ int main(int argc, char** argv) {
                 input[i] = input[i] + 32;
             }
         }
-        
+
+          
+
         //Starts from the first command, checks to see if the typed command matches any command listed.
         struct Node* n = first;
         
@@ -183,138 +211,38 @@ int main(int argc, char** argv) {
             	n = n->next;
             }
         }
-        printf(">>>> ");
+
     }
 }
 
-/*  TODO: Implement
- *  Call the correct function based on command name
- */
 void call_internal(char* command) {
     //    switch(command):
     //        case "help"
 }
 
 
-void entry_point(int argc, char* argv[], struct Node* cmd) {
+void entry_point(char** cmd) {
 
-    if (cmd->internal)
-        call_internal(cmd->command);
-     
     //Python Modules, need process forking
-    else {
+     int w;
+     pid_t childPID = fork();
 
-        // Create process communication pipes
-        pipe(c2pout);
-        pipe(p2c);
-        pipe(c2perr);
+     //Child process
+     if (childPID == 0) {
+          execvp(*cmd, cmd);
+          printf("Something went wrong with child process\n");
+          perror("exec");
+          exit(-1);
 
-        //TODO: Set up non-blocking I/O flow control
-        /*   highest_desc = p2c[1];
-
-           // Set up I/O control variables
-           fd_set rfds;     // Set of read file descriptors
-           fd_set stdoutfd; // Set of output file descriptors
-           int r, n;        // Syscall return variables  
-        */
-        int childPID = fork();
-        if (childPID == 0) {
-             //Pipe Communication Setup 
-             close(c2pout[0]); close(c2perr[0]); close(p2c[1]);
-             dup2(p2c[0], STDIN_FILENO);
-             dup2(c2pout[1], STDOUT_FILENO);
-             dup2(c2perr[1], STDERR_FILENO);
-             close(c2pout[1]);
-             close(c2perr[1]);
-             close(p2c[0]);
-
-             child_process(argc, argv);
-             printf("post child something happend\n");
-             perror("exec");
-             exit(-1);
-
-        }
-        else {
-            close(c2pout[1]); close(p2c[0]);
-             
-            main_process(argc, argv);
-            // After this function returns the pipes must be closed
-            // and buffers must be cleared
-            // reset();
-    
-        }
-    }
-        
+     }
+     //Main process, wait for child to finish
+     else {
+         while (wait(&w) != childPID);
+     }
 }
 
-void main_process(int argc, char* argv[]) {
-    char buf[100];  //Read buffer
-    fd_set rfds;    //Set of read-from file descriptors
-    fd_set stdoutfd;//Needed for nested select
-    int r;          //select() return value
-    int n;          //read() return value
-    //printf("I am the main process\n");
-
-    child_stdout = c2pout[0];
-    child_stderr = c2perr[0];
-    while(1) {
-       //TODO: Figure out when child process is done executing so we can return from this
-       //function and close all pipes and reset. Call a close and reset function? Probably.
-
-       FD_ZERO(&rfds);
-
-       //Main process reads from stdin, child_stdout, child_stderr
-       //Add stdin and child_stderr to rfds in all modes
-       FD_SET(0, &rfds);
-       FD_SET(child_stderr, &rfds);
-
-       r = select(highest_desc + 1, &rfds, 0, 0, NULL);
-       //printf("select has unblocked\n");
-
-       if(FD_ISSET(0, &rfds)) {
-           //Input waiting on stdin
-           n = read(0, buf, sizeof(buf));
-
-           //Write to child stdin
-           write(p2c[1], buf, n);
-       }
-
-       //Child has written something to its stdout
-       //Will only ever trigger here in I/O mode
-       if(FD_ISSET(child_stderr, &rfds)) {
-           char ch;
-           while(read(child_stderr, &ch, 1) == 1) {
-               write(2, &ch, 1);
-           }
-       }
-    }
-}
-
-/*
- *  Generic driver for python module execution
- */
-void child_process(int argc, char* argv[]) {
-    char buf[64];
-    char* cmd[argc];
-    
-    //Format the command for execvp
-    for(int i = 0; i <= argc; i++) {
-        if(i+1 == argc) {
-            cmd[i] = NULL;
-            break;
-        }
-        cmd[i] = argv[i+1];
-    }
-
-    execvp(cmd[0], cmd);
-    //If this is reached, execvp didn't run properly
-    exit(0);
-}
 
 //TODO: Think about modularity, don't dump a bunch of code in main
 //      Figure out how to close a child and disassociate all pipes after execution
 //      Figure out how to re-fork after closing a child process
 //
-
-
-// From here on functions should be defined for handling each C-based command (help, tutorial, etc)
