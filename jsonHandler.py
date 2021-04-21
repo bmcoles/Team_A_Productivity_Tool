@@ -5,6 +5,7 @@
 
 # TODO - Add the ability to delete entries
 # TODO - Add checks for certain user input
+# TODO - Clean up (Add more comments, make more clear for the user)
 
 import json
 from collections import namedtuple
@@ -17,11 +18,12 @@ option = 'n'  # Used extensively for the user input
 search = 'n'  # Used later for the search feature
 
 # Loop guarantees only valid input is accepted
-while option != 'r' and option != 'w':
-    option = input("Enter r for read or w for write: ")
+while option != 'r' and option != 'w' and option !='u':
+    option = input("Enter r for read, w for write, or u to enter in data for progress on a task: ")
 
 # Loop runs only while the user specifies to read and write
-while option == 'r' or option == 'w':
+while option == 'r' or option == 'w' or option == 'u':
+
     # read option
     if option == 'r':
 
@@ -114,7 +116,94 @@ while option == 'r' or option == 'w':
 
                 option = input("type c to quit or any other key to keep searching: ")
 
-        option = input("Type w to write to a file, r to read another file, or any other value to quit: ")
+            option = input("Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
+
+    # Update progress option
+    if option == 'u':
+
+        checker = 'TRUE'
+        # Checker is used to guarantee a valid file location is selected.
+        # If the user types in an invalid file, they are prompted to try again.
+        while checker == 'TRUE':
+            try:
+                toRead = input("What file holds the task you would like to update?: ")
+                toRead = "C:\\Users\\hyper\\Documents\\" + toRead + ".json"
+                readData = json.load(open(toRead))
+                checker = 'FALSE'
+            except IOError:
+                print("That file was not found. Please try again.")
+                checker = 'TRUE'
+
+        # Converts our file to the custom json object
+        with open(toRead, 'r') as file:
+            theData = file.read().replace('\n', '')
+        readTasks = json.loads(theData, object_hook=tasksDecoder)
+
+        task = input("Enter the task you would like to update an entry for: ")
+        i = len(readTasks)
+        j = 0
+        k = 0
+        l = 0
+        finder = ''
+        while j < i:
+            finder = readTasks[j].task
+            if search == finder:
+                k = j
+                j = i
+            j = j + 1
+
+        currentT = []
+        currentP = []
+
+        print("The allotted time frame for this task is ", readTasks[k].timeAmount, readTasks[k].timeUnits)
+        i = len(readTasks[k].currentTime)
+        if i == 0:
+            print ("You currently have no entries for this task.")
+        if i > 0:
+            print("Your current entries for this task are: ")
+            while l<i:
+                print(readTasks[k].currentTime[l], readTasks[k].currentProgress[l])
+                currentT.extend([readTasks[k].currentTime[l]])
+                currentP.extend([readTasks[k].currentProgress[l]])
+                l = l+1
+        option = 'y'
+
+        while option == 'y':
+            new = input("Enter the current time: ")
+            new2 = input("Enter the current progress: ")
+            currentT.extend([new])
+            currentP.extend([new2])
+            option = ("Enter y to enter another value or any other character to not: ")
+
+        appendData = []
+
+        m = len(readTasks)
+        j = 0
+        while j < m:
+            if j !=k:
+                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                    "targetGoal": readTasks[j].targetGoal,
+                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                    "currentTime": readTasks[j].currentTime,
+                                    "currentProgress": readTasks[j].currentProgress}])
+            else:
+                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                    "targetGoal": readTasks[j].targetGoal,
+                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                    "currentTime": currentT,
+                                    "currentProgress": currentP}])
+            j = j + 1
+
+
+
+        with open(toRead, 'w') as outfile:
+            json.dump(appendData, outfile)
+
+        option = input(
+            "Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
+
+
+
 
     # Write option
     if option == 'w':
@@ -187,4 +276,5 @@ while option == 'r' or option == 'w':
                 toAdd = input("Enter q to quit or any other value to continue: ")
             with open(toAppend, 'w') as outfile:
                 json.dump(appendData, outfile)
-        option = input("Type w to write to another file, r to read a file, or any other value to quit: ")
+        option = input("Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
+
