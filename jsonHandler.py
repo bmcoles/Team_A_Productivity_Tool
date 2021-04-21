@@ -1,14 +1,17 @@
 # The purpose of this program is to take in data from the c shell and process it into a json file
 # It will also read in current json files for already created and in-progress tasks
 # The purpose of this is to track the progress of all tasks and store information for them for later use
-# Authored by Brennan Coles,
+# Authored by Brennan Coles
 
-# TODO - handle file processing to work with user profiles (quick change)
 # TODO - Add the ability to delete entries
 # TODO - Add checks for certain user input
 
 import json
-import os
+from collections import namedtuple
+
+# Decoder that allows us to use a custom formatted json object
+def tasksDecoder(tasksDict):
+    return namedtuple('X', tasksDict.keys())(*tasksDict.values())
 
 option = 'n'  # Used extensively for the user input
 search = 'n'  # Used later for the search feature
@@ -21,61 +24,56 @@ while option != 'r' and option != 'w':
 while option == 'r' or option == 'w':
     # read option
     if option == 'r':
+
         checker = 'TRUE'
         # Checker is used to guarantee a valid file location is selected.
         # If the user types in an invalid file, they are prompted to try again.
         while checker == 'TRUE':
             try:
-                # toRead, as well as readData, are for the task data points.
                 toRead = input("Enter the name for the file you would like to read: ")
-                # toRead2, as well as readData2, are for the associated timeFrame data points.
-                toRead2 = "C:\\Users\\hyper\\Documents\\" + toRead + "2" + ".json"
                 toRead = "C:\\Users\\hyper\\Documents\\" + toRead + ".json"
                 readData = json.load(open(toRead))
-                readData2 = json.load(open(toRead2))
                 checker = 'FALSE'
             except IOError:
                 print("That file was not found. Please try again.")
                 checker = 'TRUE'
 
+        # Converts our file to the custom json object
+        with open(toRead, 'r') as file:
+            theData = file.read().replace('\n', '')
+        readTasks = json.loads(theData, object_hook=tasksDecoder)
+
         # Specifies read options search and all.
         # Loops until valid input is received.
         while option != 'a' and option != 's':
             option = input("Type a to see all entries or s to search for a specific task: ")
+
         # Search all entries
         if option == 'a':
             # Distinguish between task and timeframe data points
             while option != 't' and option != 'f' and option != 'b':
                 option = input("Type t to see just the tasks, f to see just the time frame, and b for both: ")
 
-                # All of the for loops in their respective if statements parse
-                # through the file with the correct data points
-                # And print the relevant information.
                 if option == 't':
-                    for i in readData:
-                        print("task: " + i + ", " + "how much: " + readData[i])
+                    i=len(readTasks)
+                    j = 0
+                    while j<i:
+                       print(readTasks[j].task , readTasks[j].targetGoal,readTasks[j].taskUnits)
+                       j = j+1
 
                 if option == 'f':
-                    for i in readData2:
-                        print("time frame type: " + i + ", " + "how much: " + readData2[i])
-
-                # To print both, both files need to be accessed simultaneously.
-                # Because of how .json is stored, loaded, and read, there must be two loops
-                # to access the files. h and j allow us to grab the associated timeframe data
-                # for the correct task data. h goes up and tracks where we are in tasks,
-                # while j, which is always reset, tracks timeframe. Since timeframe is
-                # accessed within the inner loop, j must be reset everytime. When h and j match,
-                # we know we have the two data points that go with each other.
-                if option == 'b':
-                    h = 0
+                    i = len(readTasks)
                     j = 0
-                    for i in readData:
-                        j = 0
-                        for m in readData2:
-                            if h == j:
-                                print("task: " + i +  ", " + "how much: " + readData[i] + ", " + "time frame type: " + m + ", " + "how much: " + readData2[m])
-                            j = j+1
-                        h = h+1
+                    while j < i:
+                        print(readTasks[j].timeAmount, readTasks[j].timeUnits)
+                        j = j + 1
+
+                if option == 'b':
+                    i = len(readTasks)
+                    j = 0
+                    while j < i:
+                        print(readTasks[j].task , readTasks[j].targetGoal , readTasks[j].taskUnits, readTasks[j].timeAmount, readTasks[j].timeUnits )
+                        j = j + 1
 
         # Search feature
         if option == 's':
@@ -85,34 +83,34 @@ while option == 'r' or option == 'w':
 
                 if option == 't':
                     search = input("Type of the task you would like to search for (no amount): ")
-                    m = 0
-                    # Since we access both files, and use an inner loop,
-                    # We go through using the same method above for
-                    # option b of the all feature.
-                    for i in readData:
-                        if search == i:
-                            m2 = 0
-                            for g in readData2:
-                                if m == m2:
-                                    print("time frame type for this task: " + g + ", " + "how much: " + readData2[g])
-                                m2 = m2+1
-                        m = m+1
+                    i = len(readTasks)
+                    j = 0
+                    k = 0
+                    finder = ''
+                    while j < i:
+                        finder = readTasks[j].task
+                        if search == finder:
+                            k = j
+                            j = i
+                        j = j + 1
+                    print(readTasks[k].timeAmount , readTasks[k].timeUnits)
 
-                # Since we access both files, and use an inner loop,
-                # We go through using the same method above for
-                # option b of the all feature.
+
                 if option == 'f':
-                    search = input("Type of the time frame you would like to search for: ")
-                    search2 = input("Amount of the time frame you would like to search for: ")
-                    m = 0
-                    for i in readData2:
-                        if search == i and search2 == readData2[i]:
-                            m2 = 0
-                            for g in readData:
-                                if m == m2:
-                                    print("task with this time frame: " + g + ", " + "amount: " + readData[g])
-                                m2 = m2+1
-                        m = m+1
+                    search = input("Type of the timeframe you would like to search for (no amount): ")
+                    search2 = input("Amount for this timeframe: ")
+                    i = len(readTasks)
+                    j = 0
+                    k = 0
+                    finder = ''
+                    while j < i:
+                        finder = readTasks[j].timeUnits
+                        finder = readTasks[j].timeAmount
+                        if search == finder:
+                            k = j
+                            j = i
+                        j = j + 1
+                    print(readTasks[k].task, readTasks[k].targetGoal, readTasks[k].taskUnits)
 
                 option = input("type c to quit or any other key to keep searching: ")
 
@@ -122,8 +120,7 @@ while option == 'r' or option == 'w':
     if option == 'w':
         checker = 'TRUE'
         toAdd = 'g'
-        data = {}
-        data2 = {}
+        data = []
 
         # This loop guarantees only proper input is received.
         while option != 'n' and option != 'o':
@@ -135,10 +132,10 @@ while option == 'r' or option == 'w':
             while toAdd != 'q':
                 task = input("Enter the task type: ")
                 task2 = input("Enter the task amount: ")
+                task3 = input("Enter the task units: ")
                 timeFrame = input("Enter the time frame type for this task (week, day, month, etc.): ")
                 timeFrame2 = input("Enter the time frame amount: ")
-                data[task] = task2
-                data2[timeFrame] = timeFrame2
+                data.extend([{"task":task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame, "timeAmount" : timeFrame2, "currentTime": [], "currentProgress": []}])
                 toAdd = input("Enter q to quit or any other value to continue: ")
 
             toWrite = input("Enter the name of the file you would like to write: ")
@@ -148,41 +145,46 @@ while option == 'r' or option == 'w':
             with open(toWrite, 'w') as outfile:
                 json.dump(data, outfile)
 
-            with open(toWrite2, 'w') as outfile:
-                json.dump(data2, outfile)
 
         # Append to old file option
-        if option=='o':
-            # Loop sets all values currently in readData into data before adding new values to data
-            # Runs in O(n) time complexity
+        if option == 'o':
             checker = 'TRUE'
-            while checker=='TRUE':
+            while checker == 'TRUE':
                 try:
                     toAppend = input("Enter the name of the file to append: ")
-                    toAppend2 = "C:\\Users\\hyper\\Documents\\" + toAppend + "2" + ".json"
                     toAppend = "C:\\Users\\hyper\\Documents\\" + toAppend + ".json"
                     readData = json.load(open(toAppend))
-                    readData2 = json.load(open(toAppend2))
                     checker = 'FALSE'
                 except IOError:
                     print("That file was not found. Please try again.")
                     checker = 'TRUE'
 
-            for i in readData:
-                data[i] = readData[i]
-            for i in readData2:
-                data2[i] = readData2[i]
+            with open(toAppend, 'r') as file:
+                theData = file.read().replace('\n', '')
+            fileToAppend = json.loads(theData, object_hook=tasksDecoder)
+
+            appendData = []
+
+            i = len(fileToAppend)
+            j = 0
+            while j < i:
+                appendData.extend([{"task" : fileToAppend[j].task, "taskUnits" : fileToAppend[j].taskUnits, "targetGoal" : fileToAppend[j].targetGoal,
+                                    "timeUnits" : fileToAppend[j].timeUnits, "timeAmount": fileToAppend[j].timeAmount,
+                                    "currentTime": fileToAppend[j].currentTime, "currentProgress": fileToAppend[j].currentProgress}])
+                j = j + 1
+
+
             while toAdd != 'q':
                 task = input("Enter the task name: ")
                 task2 = input("Enter the task amount: ")
+                task3 = input("Enter the task units: ")
                 timeFrame = input("Enter the time frame type for this task (week, day, month, etc.): ")
                 timeFrame2 = input("Enter the amount for this time frame: ")
-                data[task] = task2
-                data2[timeFrame] = timeFrame2
+
+                appendData.extend([{"task": task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame,
+                                    "timeAmount": timeFrame2, "currentTime": [], "currentProgress": []}])
+
                 toAdd = input("Enter q to quit or any other value to continue: ")
             with open(toAppend, 'w') as outfile:
-                json.dump(data, outfile)
-            with open(toAppend2, 'w') as outfile:
-                json.dump(data2, outfile)
+                json.dump(appendData, outfile)
         option = input("Type w to write to another file, r to read a file, or any other value to quit: ")
-
