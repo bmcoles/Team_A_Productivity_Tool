@@ -15,7 +15,7 @@ def tasksDecoder(tasksDict):
     return namedtuple('X', tasksDict.keys())(*tasksDict.values())
 
 
-option = 'n'  # Used extensively for the user input  
+option = 'n'  # Used extensively for the user input
 search = 'n'  # Used later for the search feature
 
 # Loop guarantees only valid input is accepted
@@ -260,8 +260,8 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
             checker = 'TRUE'
             while toAdd != 'q':
                 task = input("Enter the task type: ")
-                task2 = input("Enter the task amount: ")
-                task3 = input("Enter the task units: ")
+                task2 = input("Enter the task units: ")
+                task3 = input("Enter the task amount: ")
                 timeFrame = input("Enter the time frame type for this task (week, day, month, etc.): ")
                 timeFrame2 = input("Enter the time frame amount: ")
                 data.extend([{"task": task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame,
@@ -269,7 +269,6 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                 toAdd = input("Enter q to quit or any other value to continue: ")
 
             toWrite = input("Enter the name of the file you would like to write: ")
-            toWrite2 = "C:\\Users\\hyper\\Documents\\" + toWrite + "2" + ".json"
             toWrite = "C:\\Users\\hyper\\Documents\\" + toWrite + ".json"
 
             with open(toWrite, 'w') as outfile:
