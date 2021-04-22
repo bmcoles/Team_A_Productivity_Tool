@@ -5,8 +5,6 @@
 # The data is formatted to interact with Zayne's graphing program
 # Authored by Brennan Coles
 
-# TODO - Add checks for certain user input
-
 import json
 from collections import namedtuple
 
@@ -89,13 +87,13 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         if option == 's':
             while option != 'c':
                 # Option always us to search for specific tasks or time frames
-                option = input(
-                    "enter t to find the time frame for a task or f to find the tasks with a set time frame: ")
+                option = input("enter t to find the time frame for a task or f to find the tasks with a set time frame: ")
 
                 # The loops below also go through the entire object
                 # They will stop when the proper entry is found
                 # Tracker variables are used to note the correct location
 
+                found = False
                 if option == 't':
                     search = input("Type of the task you would like to search for (no amount): ")
                     i = len(readTasks)
@@ -107,8 +105,10 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                         if search == finder:
                             k = j
                             j = i
+                            found = True
                         j = j + 1
-                    print(readTasks[k].timeAmount, readTasks[k].timeUnits)
+                    if found == True:
+                        print(readTasks[k].timeAmount, readTasks[k].timeUnits)
 
                 if option == 'f':
                     search = input("Type of the timeframe you would like to search for (week, month, etc.): ")
@@ -123,9 +123,13 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                         if search == finder and search2 == finder2:
                             k = j
                             j = i
+                            found = True
                         j = j + 1
-                    print(readTasks[k].task, readTasks[k].targetGoal, readTasks[k].taskUnits)
+                    if found == True:
+                        print(readTasks[k].task, readTasks[k].targetGoal, readTasks[k].taskUnits)
 
+                if found == False:
+                    print("Entry not found!")
                 option = input("type c to quit or any other key to keep searching: ")
 
             option = input("Type w to write to a file, r to read another file, u to update an entry, d to delete a task, or any other value to quit: ")
@@ -154,6 +158,7 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         # The loop below finds the correct task to update
         # Does so by using tracker variables to not position
         # of the proper entry in the object and file
+        found = False
         task = input("Enter the task you would like to update an entry for: ")
         i = len(readTasks)
         j = 0
@@ -162,64 +167,66 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         finder = ''
         while j < i:
             finder = readTasks[j].task
-            if search == finder:
+            if task == finder:
                 k = j
                 j = i
+                found = True
             j = j + 1
 
         # These will be used later to store the new data points
         currentT = []
         currentP = []
+        if found == True:
+            print("The allotted time frame for this task is", readTasks[k].timeAmount, readTasks[k].timeUnits)
+            i = len(readTasks[k].currentTime)
+            if i == 0:
+                print("You currently have no entries for this task.")
+            if i > 0:
+                print("Your current entries for this task are: ")
+                while l < i:
+                    print(readTasks[k].timeUnits, readTasks[k].currentTime[l], '-', readTasks[k].currentProgress[l], readTasks[k].taskUnits)
+                    # These extend functions will add existing data to our storage created earlier
+                    currentT.extend([readTasks[k].currentTime[l]])
+                    currentP.extend([readTasks[k].currentProgress[l]])
+                    l = l + 1
+            option = 'y'
 
-        print("The allotted time frame for this task is", readTasks[k].timeAmount, readTasks[k].timeUnits)
-        i = len(readTasks[k].currentTime)
-        if i == 0:
-            print("You currently have no entries for this task.")
-        if i > 0:
-            print("Your current entries for this task are: ")
-            while l < i:
-                print(readTasks[k].timeUnits, readTasks[k].currentTime[l], '-', readTasks[k].currentProgress[l], readTasks[k].taskUnits)
-                # These extend functions will add existing data to our storage created earlier
-                currentT.extend([readTasks[k].currentTime[l]])
-                currentP.extend([readTasks[k].currentProgress[l]])
-                l = l + 1
-        option = 'y'
+            while option == 'y':
+                new = input("Enter the value for the current time for this task (numeric amount only) : ")
+                new2 = input("Enter the value for the  current progress for this task (numeric amount only): ")
+                currentT.extend([new])
+                currentP.extend([new2])
+                option = input ("Enter y to enter another value or any other character to not: ")
 
-        while option == 'y':
-            new = input("Enter the value for the current time for this task (numeric amount only) : ")
-            new2 = input("Enter the value for the  current progress for this task (numeric amount only): ")
-            currentT.extend([new])
-            currentP.extend([new2])
-            option = ("Enter y to enter another value or any other character to not: ")
+            # Data is appended together her to merge the old and new values
+            appendData = []
 
-        # Data is appended together her to merge the old and new values
-        appendData = []
+            # The loop below goes through all of the old tasks and re-adds them to the appended data
+            m = len(readTasks)
+            j = 0
+            while j < m:
+                # Checks to see if we are on the entry we are adding new information to
+                if j != k:
+                    appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                        "targetGoal": readTasks[j].targetGoal,
+                                        "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                        "currentTime": readTasks[j].currentTime,
+                                        "currentProgress": readTasks[j].currentProgress}])
+                # This else will add in the new data in addition to the new for the task that needs to be updated
+                else:
+                    appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                        "targetGoal": readTasks[j].targetGoal,
+                                        "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                        "currentTime": currentT,
+                                        "currentProgress": currentP}])
+                j = j + 1
 
-        # The loop below goes through all of the old tasks and re-adds them to the appended data
-        m = len(readTasks)
-        j = 0
-        while j < m:
-            # Checks to see if we are on the entry we are adding new information to
-            if j != k:
-                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
-                                    "targetGoal": readTasks[j].targetGoal,
-                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
-                                    "currentTime": readTasks[j].currentTime,
-                                    "currentProgress": readTasks[j].currentProgress}])
-            # This else will add in the new data in addition to the new for the task that needs to be updated
-            else:
-                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
-                                    "targetGoal": readTasks[j].targetGoal,
-                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
-                                    "currentTime": currentT,
-                                    "currentProgress": currentP}])
-            j = j + 1
+            with open(toRead, 'w') as outfile:
+                json.dump(appendData, outfile)
 
-        with open(toRead, 'w') as outfile:
-            json.dump(appendData, outfile)
-
-        option = input(
-            "Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
+        if found == False:
+            print ("Entry to update not found!")
+        option = input("Type w to write to a file, r to read another file, u to update an entry, d to delete a task, or any other value to quit: ")
 
     # Delete Option
     if option == 'd':
@@ -299,7 +306,7 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
             with open(toRead, 'w') as outfile:
                 json.dump(appendData, outfile)
 
-        option = input("Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
+        option = input("Type w to write to a file, r to read another file, u to update an entry, d to delete a task, or any other value to quit: ")
 
     # Write option
     if option == 'w':
