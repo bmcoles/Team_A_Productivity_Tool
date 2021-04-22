@@ -3,26 +3,27 @@
 # The purpose of this is to track the progress of all tasks and store information for them for later use
 # Authored by Brennan Coles
 
-# TODO - Add the ability to delete entries
 # TODO - Add checks for certain user input
 # TODO - Clean up (Add more comments, make more clear for the user)
 
 import json
 from collections import namedtuple
 
+
 # Decoder that allows us to use a custom formatted json object
 def tasksDecoder(tasksDict):
     return namedtuple('X', tasksDict.keys())(*tasksDict.values())
 
-option = 'n'  # Used extensively for the user input
+
+option = 'n'  # Used extensively for the user input  
 search = 'n'  # Used later for the search feature
 
 # Loop guarantees only valid input is accepted
-while option != 'r' and option != 'w' and option !='u':
-    option = input("Enter r for read, w for write, or u to enter in data for progress on a task: ")
+while option != 'r' and option != 'w' and option != 'u' and option != 'd':
+    option = input("Enter r for read, w for write, u to update data for progress on a task, or d to delete a task: ")
 
 # Loop runs only while the user specifies to read and write
-while option == 'r' or option == 'w' or option == 'u':
+while option == 'r' or option == 'w' or option == 'u' or option == 'd':
 
     # read option
     if option == 'r':
@@ -57,11 +58,11 @@ while option == 'r' or option == 'w' or option == 'u':
                 option = input("Type t to see just the tasks, f to see just the time frame, and b for both: ")
 
                 if option == 't':
-                    i=len(readTasks)
+                    i = len(readTasks)
                     j = 0
-                    while j<i:
-                       print(readTasks[j].task , readTasks[j].targetGoal,readTasks[j].taskUnits)
-                       j = j+1
+                    while j < i:
+                        print(readTasks[j].task, readTasks[j].targetGoal, readTasks[j].taskUnits)
+                        j = j + 1
 
                 if option == 'f':
                     i = len(readTasks)
@@ -74,14 +75,16 @@ while option == 'r' or option == 'w' or option == 'u':
                     i = len(readTasks)
                     j = 0
                     while j < i:
-                        print(readTasks[j].task , readTasks[j].targetGoal , readTasks[j].taskUnits, readTasks[j].timeAmount, readTasks[j].timeUnits )
+                        print(readTasks[j].task, readTasks[j].targetGoal, readTasks[j].taskUnits,
+                              readTasks[j].timeAmount, readTasks[j].timeUnits)
                         j = j + 1
 
         # Search feature
         if option == 's':
             while option != 'c':
                 # Option always us to search for specific tasks or time frames
-                option = input("enter t to find the time frame for a task or f to find the tasks with a set time frame: ")
+                option = input(
+                    "enter t to find the time frame for a task or f to find the tasks with a set time frame: ")
 
                 if option == 't':
                     search = input("Type of the task you would like to search for (no amount): ")
@@ -95,8 +98,7 @@ while option == 'r' or option == 'w' or option == 'u':
                             k = j
                             j = i
                         j = j + 1
-                    print(readTasks[k].timeAmount , readTasks[k].timeUnits)
-
+                    print(readTasks[k].timeAmount, readTasks[k].timeUnits)
 
                 if option == 'f':
                     search = input("Type of the timeframe you would like to search for (no amount): ")
@@ -116,7 +118,8 @@ while option == 'r' or option == 'w' or option == 'u':
 
                 option = input("type c to quit or any other key to keep searching: ")
 
-            option = input("Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
+            option = input(
+                "Type w to write to a file, r to read another file, u to update an entry, d to delete a task, or any other value to quit: ")
 
     # Update progress option
     if option == 'u':
@@ -158,14 +161,14 @@ while option == 'r' or option == 'w' or option == 'u':
         print("The allotted time frame for this task is ", readTasks[k].timeAmount, readTasks[k].timeUnits)
         i = len(readTasks[k].currentTime)
         if i == 0:
-            print ("You currently have no entries for this task.")
+            print("You currently have no entries for this task.")
         if i > 0:
             print("Your current entries for this task are: ")
-            while l<i:
+            while l < i:
                 print(readTasks[k].currentTime[l], readTasks[k].currentProgress[l])
                 currentT.extend([readTasks[k].currentTime[l]])
                 currentP.extend([readTasks[k].currentProgress[l]])
-                l = l+1
+                l = l + 1
         option = 'y'
 
         while option == 'y':
@@ -180,7 +183,7 @@ while option == 'r' or option == 'w' or option == 'u':
         m = len(readTasks)
         j = 0
         while j < m:
-            if j !=k:
+            if j != k:
                 appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
                                     "targetGoal": readTasks[j].targetGoal,
                                     "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
@@ -194,16 +197,53 @@ while option == 'r' or option == 'w' or option == 'u':
                                     "currentProgress": currentP}])
             j = j + 1
 
+        with open(toRead, 'w') as outfile:
+            json.dump(appendData, outfile)
 
+        option = input(
+            "Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
+
+    # Delete Option
+    if option == 'd':
+        checker = 'TRUE'
+        # Checker is used to guarantee a valid file location is selected.
+        # If the user types in an invalid file, they are prompted to try again.
+        while checker == 'TRUE':
+            try:
+                toRead = input("What file holds the task you would like to update?: ")
+                toRead = "C:\\Users\\hyper\\Documents\\" + toRead + ".json"
+                readData = json.load(open(toRead))
+                checker = 'FALSE'
+            except IOError:
+                print("That file was not found. Please try again.")
+                checker = 'TRUE'
+
+        # Converts our file to the custom json object
+        with open(toRead, 'r') as file:
+            theData = file.read().replace('\n', '')
+        readTasks = json.loads(theData, object_hook=tasksDecoder)
+
+        taskToDelete = input("Enter the task you would like to delete an entry for: ")
+
+        appendData = []
+        m = len(readTasks)
+        j = 0
+        while j < m:
+
+            if readTasks[j].task != taskToDelete:
+                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                    "targetGoal": readTasks[j].targetGoal,
+                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                    "currentTime": readTasks[j].currentTime,
+                                    "currentProgress": readTasks[j].currentProgress}])
+            j = j + 1
+        print(appendData)
 
         with open(toRead, 'w') as outfile:
             json.dump(appendData, outfile)
 
         option = input(
-            "Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
-
-
-
+            "Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
 
     # Write option
     if option == 'w':
@@ -224,7 +264,8 @@ while option == 'r' or option == 'w' or option == 'u':
                 task3 = input("Enter the task units: ")
                 timeFrame = input("Enter the time frame type for this task (week, day, month, etc.): ")
                 timeFrame2 = input("Enter the time frame amount: ")
-                data.extend([{"task":task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame, "timeAmount" : timeFrame2, "currentTime": [], "currentProgress": []}])
+                data.extend([{"task": task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame,
+                              "timeAmount": timeFrame2, "currentTime": [], "currentProgress": []}])
                 toAdd = input("Enter q to quit or any other value to continue: ")
 
             toWrite = input("Enter the name of the file you would like to write: ")
@@ -233,7 +274,6 @@ while option == 'r' or option == 'w' or option == 'u':
 
             with open(toWrite, 'w') as outfile:
                 json.dump(data, outfile)
-
 
         # Append to old file option
         if option == 'o':
@@ -257,11 +297,12 @@ while option == 'r' or option == 'w' or option == 'u':
             i = len(fileToAppend)
             j = 0
             while j < i:
-                appendData.extend([{"task" : fileToAppend[j].task, "taskUnits" : fileToAppend[j].taskUnits, "targetGoal" : fileToAppend[j].targetGoal,
-                                    "timeUnits" : fileToAppend[j].timeUnits, "timeAmount": fileToAppend[j].timeAmount,
-                                    "currentTime": fileToAppend[j].currentTime, "currentProgress": fileToAppend[j].currentProgress}])
+                appendData.extend([{"task": fileToAppend[j].task, "taskUnits": fileToAppend[j].taskUnits,
+                                    "targetGoal": fileToAppend[j].targetGoal,
+                                    "timeUnits": fileToAppend[j].timeUnits, "timeAmount": fileToAppend[j].timeAmount,
+                                    "currentTime": fileToAppend[j].currentTime,
+                                    "currentProgress": fileToAppend[j].currentProgress}])
                 j = j + 1
-
 
             while toAdd != 'q':
                 task = input("Enter the task name: ")
@@ -276,5 +317,5 @@ while option == 'r' or option == 'w' or option == 'u':
                 toAdd = input("Enter q to quit or any other value to continue: ")
             with open(toAppend, 'w') as outfile:
                 json.dump(appendData, outfile)
-        option = input("Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
-
+        option = input(
+            "Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
