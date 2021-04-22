@@ -6,7 +6,6 @@
 # Authored by Brennan Coles
 
 # TODO - Add checks for certain user input
-# TODO - Allow for entry updates to be deleted
 
 import json
 from collections import namedtuple
@@ -84,6 +83,7 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                         print(readTasks[j].task, readTasks[j].targetGoal, readTasks[j].taskUnits,
                               readTasks[j].timeAmount, readTasks[j].timeUnits)
                         j = j + 1
+            option = input("Type w to write to a file, r to read another file, u to update an entry, d to delete a task, or any other value to quit: ")
 
         # Search feature
         if option == 's':
@@ -228,7 +228,7 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         # If the user types in an invalid file, they are prompted to try again.
         while checker == 'TRUE':
             try:
-                toRead = input("What file holds the task you would like to update?: ")
+                toRead = input("What file holds the task you would like to delete?: ")
                 toRead = "C:\\Users\\hyper\\Documents\\" + toRead + ".json"
                 readData = json.load(open(toRead))
                 checker = 'FALSE'
@@ -242,27 +242,64 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         readTasks = json.loads(theData, object_hook=tasksDecoder)
 
         taskToDelete = input("Enter the task you would like to delete an entry for: ")
+        print ("Would you like to delete the entire entry or just some previously entered progress?")
+        option = input ("Enter e for entire or p for some progress: ")
 
-        # This will store all of our old data minus what we delete
-        appendData = []
-        m = len(readTasks)
-        j = 0
-        while j < m:
-            # Every value will be re-added to the new array sans what we are removing
-            if readTasks[j].task != taskToDelete:
-                appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
-                                    "targetGoal": readTasks[j].targetGoal,
-                                    "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
-                                    "currentTime": readTasks[j].currentTime,
-                                    "currentProgress": readTasks[j].currentProgress}])
-            j = j + 1
-        print(appendData)
+        if option == 'e':
+            # This will store all of our old data minus what we delete
+            appendData = []
+            m = len(readTasks)
+            j = 0
+            while j < m:
+                # Every value will be re-added to the new array sans what we are removing
+                if readTasks[j].task != taskToDelete:
+                    appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                        "targetGoal": readTasks[j].targetGoal,
+                                        "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                        "currentTime": readTasks[j].currentTime,
+                                        "currentProgress": readTasks[j].currentProgress}])
+                j = j + 1
 
-        with open(toRead, 'w') as outfile:
-            json.dump(appendData, outfile)
+            with open(toRead, 'w') as outfile:
+                json.dump(appendData, outfile)
 
-        option = input(
-            "Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
+        if option == 'p':
+            # This will store all of our old data minus what we delete
+            appendData = []
+            currentT = []
+            currentP = []
+            m = len(readTasks)
+            j = 0
+            while j < m:
+                # Every value will be re-added to the new array sans what we are removing
+                if readTasks[j].task != taskToDelete:
+                    appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                        "targetGoal": readTasks[j].targetGoal,
+                                        "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                        "currentTime": readTasks[j].currentTime,
+                                        "currentProgress": readTasks[j].currentProgress}])
+                else:
+                    n = len(readTasks[j].currentTime)
+                    o = 0
+                    print("Your current entries for this task are: ")
+                    while o<n:
+                        print(readTasks[j].timeUnits, readTasks[j].currentTime[o], '-', readTasks[j].currentProgress[o], readTasks[j].taskUnits)
+                        option = input ("Type y if you would like to delete this entry or any other character if not: ")
+                        if option != 'y':
+                            currentT.extend([readTasks[j].currentTime[o]])
+                            currentP.extend(readTasks[j].currentProgress[o])
+                        o = o + 1
+                    appendData.extend([{"task": readTasks[j].task, "taskUnits": readTasks[j].taskUnits,
+                                        "targetGoal": readTasks[j].targetGoal,
+                                        "timeUnits": readTasks[j].timeUnits, "timeAmount": readTasks[j].timeAmount,
+                                        "currentTime": currentT,
+                                        "currentProgress": currentP}])
+
+                j = j + 1
+            with open(toRead, 'w') as outfile:
+                json.dump(appendData, outfile)
+
+        option = input("Type w to write to a file, r to read another file, u to update an entry, do to delete a task, or any other value to quit: ")
 
     # Write option
     if option == 'w':
@@ -335,5 +372,4 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                 toAdd = input("Enter q to quit or any other value to continue: ")
             with open(toAppend, 'w') as outfile:
                 json.dump(appendData, outfile)
-        option = input(
-            "Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ") 
+        option = input("Type w to write to a file, r to read another file, u to update an entry, or any other value to quit: ")
