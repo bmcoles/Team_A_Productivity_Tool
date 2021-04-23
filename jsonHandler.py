@@ -92,7 +92,8 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
                 # The loops below also go through the entire object
                 # They will stop when the proper entry is found
                 # Tracker variables are used to note the correct location
-
+                # Found is used to loop back if a nonexistent entry is entered
+                
                 found = False
                 if option == 't':
                     search = input("Type of the task you would like to search for (no amount): ")
@@ -158,6 +159,7 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
         # The loop below finds the correct task to update
         # Does so by using tracker variables to not position
         # of the proper entry in the object and file
+        # Found is used to loop back if a non existent entry is entered
         found = False
         task = input("Enter the task you would like to update an entry for: ")
         i = len(readTasks)
@@ -192,8 +194,27 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
             option = 'y'
 
             while option == 'y':
-                new = input("Enter the value for the current time for this task (numeric amount only) : ")
-                new2 = input("Enter the value for the  current progress for this task (numeric amount only): ")
+                
+                # Checker2 used to make sure only numeric input is received below
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        new = input("Enter the value for the current time for this task (numeric amount only) : ")
+                        toCheck = int(new)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
+
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        new2 = input("Enter the value for the  current progress for this task (numeric amount only): ")
+                        toCheck = int(new2)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
                 currentT.extend([new])
                 currentP.extend([new2])
                 option = input ("Enter y to enter another value or any other character to not: ")
@@ -324,9 +345,25 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
             while toAdd != 'q':
                 task = input("Enter the type of task without units (lose weight, write a book, etc.): ")
                 task2 = input("Enter the task units (lbs, pages, etc.): ")
-                task3 = input("Enter the task amount (10, 50, etc.): ")
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        task3 = input("Enter the task amount (10, 50, etc.): ")
+                        toCheck = int(task3)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
                 timeFrame = input("Enter the time frame type for this task (week, day, etc.): ")
-                timeFrame2 = input("Enter the time frame amount (5, 10, etc.): ")
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        timeFrame2 = input("Enter the time frame amount (5, 10, etc.): ")
+                        toCheck = int(timeFrame2)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
                 data.extend([{"task": task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame,
                               "timeAmount": timeFrame2, "currentTime": [], "currentProgress": []}])
                 toAdd = input("Enter q to quit or any other value to continue: ")
@@ -369,9 +406,25 @@ while option == 'r' or option == 'w' or option == 'u' or option == 'd':
             while toAdd != 'q':
                 task = input("Enter the type of task without units (lose weight, write a book, etc.): ")
                 task2 = input("Enter the task units (lbs, pages, etc.): ")
-                task3 = input("Enter the task amount (10, 50, etc.): ")
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        task3 = input("Enter the task amount (10, 50, etc.): ")
+                        toCheck = int(task3)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
                 timeFrame = input("Enter the time frame type for this task (week, day, etc.): ")
-                timeFrame2 = input("Enter the time frame amount (5, 10, etc.): ")
+                checker2 = True
+                while checker2:
+                    try:
+                        checker2 = False
+                        timeFrame2 = input("Enter the time frame amount (5, 10, etc.): ")
+                        toCheck = int(timeFrame2)
+                    except ValueError:
+                        print("This value is not numeric. Enter again.")
+                        checker2 = True
 
                 appendData.extend([{"task": task, "taskUnits": task2, "targetGoal": task3, "timeUnits": timeFrame,
                                     "timeAmount": timeFrame2, "currentTime": [], "currentProgress": []}])
