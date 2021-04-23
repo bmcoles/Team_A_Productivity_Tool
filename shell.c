@@ -88,12 +88,128 @@ void  format(char *input, char **cmd) {
      *cmd = '\0';
 }
 
+void create()
+{
+    //Makes a buffer to enter in a username and password
+    char username[100] = "\0";
+    char password[100] = "\0";
+    
+    //Gets the information from the user
+    printf("Please enter the username you wish to have\n");
+    fgets(username, 99, stdin);
+    printf("Please enter the password you wish to have\n");
+    fgets(password, 99, stdin);
+    
+    //Opens the file. If there is a problem, returns an error and crashes
+    FILE* fptr;
+    if((fptr = fopen("logins.txt", "a")) == NULL)
+    {
+    	printf("Error\n");
+    	exit(1);
+    }
+    
+    //Writes the username and password to a file
+    fprintf(fptr, "%s%s\n", username, password);
+    fclose(fptr);
+    printf("Returning to the login menu. Please enter login to login\n");
+}
 
+int login()
+{
+    //Creates a buffer for the user's entered username and password, and for the username and password being compared from the file
+    char username[100] = "\0";
+    char password[100] = "\0";
+    char ubuffer[100] = "\0";
+    char pbuffer[100] = "\0";
+    
+    //Information from the user
+    printf("Enter your username\n");
+    fgets(username, 99, stdin);
+    printf("Enter your password\n");
+    fgets(password, 99, stdin);
+    
+    //Opens the file
+    FILE* fptr;
+    if((fptr = fopen("logins.txt", "r")) ==  NULL)
+    {
+        printf("Error\n");
+        exit(1);
+    }
+    
+    //Looks at the first username in the file, then grabs the password that goes with it. If the username and password combination is not in the file, exits the while loop
+    while(fscanf(fptr, "%s", ubuffer) != EOF)
+    {
+    	fscanf(fptr, "%s", pbuffer);
+    	
+    	//Formatting for the comparison
+    	strcat(ubuffer, "\n");
+    	strcat(pbuffer, "\n");
+    	
+    	//If the entered username matches a username in the file, checks to see if the entered password matches the corresponding password
+    	if(!strcmp(username, ubuffer))
+    	{
+    	    if(!strcmp(password, pbuffer))
+    	    {
+    	    	//If both match, tells the main function it can continue with a successful login
+    	    	fclose(fptr);
+    	        return 0;
+    	    }
+    	    else
+    	    {
+    	    	//Otherwise, it keeps looking through the file
+    	    	continue;
+    	    }
+    	}
+    	else
+    	{
+    	    continue;
+    	}
+    }
+    fclose(fptr);
+    return 1;
+}
 
 // Shell execution entry point
 int main(int argc, char** argv) {
 
     printf("Welcome to Productivity Shell Version 0.0.0.0.0.0.0.1\n");
+    int entry = 1;
+    while(entry)
+    {
+        printf("If you wish to log in, type login. If you wish to create an account, type create\n");
+        
+        char input[100] = "\0";
+        
+        fgets(input, 99, stdin);
+        
+        for(int i = 0; input[i] != '\0'; i++)
+        {
+            if(input[i] >= 'A' && input[i] <= 'Z')
+            {
+                input[i] = input[i] + 32;
+            }
+        }
+        if(!strcmp(input, "login\n\0"))
+        {
+            entry = login();
+            if(!entry)
+            {
+            	printf("Hello. Welcome user.\n");
+            }
+            else
+            {
+            	printf("Username or Password does not match. Please try again\n");
+            }
+        }
+        else if(!strcmp(input, "create\n\0"))
+        {
+            create();
+        }
+        else
+        {
+            printf("Invalid Command");
+        }
+    }
     printf("Type \'tutorials\' for user guides\n");
     printf("Type \'help\' for usage\n");
     printf("Type \'time\' for the current date and time\n");
