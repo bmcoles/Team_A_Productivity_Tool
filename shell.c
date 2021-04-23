@@ -220,17 +220,21 @@ int main(int argc, char** argv) {
     struct Node* second = NULL;
     struct Node* third = NULL;
     struct Node* fourth = NULL;
+    struct Node* fifth = NULL;
+    struct Node* sixth = NULL;
     struct Node* end = NULL;
     
     first = (struct Node*) malloc(sizeof(struct Node)); //Gives them space
     second = (struct Node*) malloc(sizeof(struct Node));
     third = (struct Node*) malloc(sizeof(struct Node));
     fourth = (struct Node*) malloc(sizeof(struct Node));
+    fifth = (struct Node*) malloc(sizeof(struct Node));
+    sixth = (struct Node*) malloc(sizeof(struct Node));
     end = (struct Node*) malloc(sizeof(struct Node));
     
     //Sets up each node with a command that will be checked against, the output that goes with each command, and links the nodes
     first->command = "help\n\0";
-    first->display = "If you want to get the date and time, type 'time'\n\n\0";
+    first->display = "Command List:\n time - show date and time\n pomodoro - Call pomodoro timer\n entry - create and modify tracked data entries\n graph - Graph data recorded using \"entry\"\n";
     first->next = second;
     
     second->command = "tutorials\n\0";
@@ -240,15 +244,24 @@ int main(int argc, char** argv) {
     third->command = "time\n\0";
     third->display = NULL;
     third->next = fourth;
-    
+ 
     fourth->command = "pomodoro\n\0";
     fourth->display = NULL;
-    fourth->next = end;
-    
+    fourth->next = fifth;
+
+    fifth->command = "entry\n\0";
+    fifth->display = NULL;
+    fifth->next = sixth;
+
+    sixth->command = "graph\n\0";
+    sixth->display = NULL;
+    sixth->next = end;
+
     //This node is the last one, and if it is reached, the command was invalid
     end->command = NULL;
     end->display = "Invalid Command\n\n\0";
     end->next = NULL;
+
     /*
      * This is our main loop which drives the shell
      *  
@@ -268,16 +281,6 @@ int main(int argc, char** argv) {
         //Takes in user input. This function with scanf allows for spaces to be scanned in addition to normal input
         fgets(input, 99, stdin);
         
-        //Checks to see if the input is for a python module
-        //TODO: Replace this with check for external command names
-        char* check = strtok(input, " ");
-        if(!strcmp(check, "python3")) {
-            char* cmd[128];
-            format(input, cmd);
-            entry_point(cmd);
-            continue;
-        }
-
         //Starts by making the typed command all lowercase for comparisons
         for(int i = 0; input[i] != '\0'; i++)
         {
@@ -303,13 +306,14 @@ int main(int argc, char** argv) {
             //If either the last node is checked, which means the command does not exist, or a command is found, prints out what should be printed
             if(n->next == NULL || !strcmp(input, n->command))
             {
+                char* args[3]; 
                 //If the command is for the pomodoro timer, it runs that
                 if(!strcmp(input, "pomodoro\n\0"))
                 {
                     pomodoro();
+                    break;
                 }
-                
-                else
+                else if(!strcmp(input, "time\n\0"))
                 {
                     //This makes sure the shell can tell the time when the time command is entered
                     char temp[256];
@@ -317,8 +321,29 @@ int main(int argc, char** argv) {
                     third->display = strcat(temp, asctime(localtime(getTime())));
                     third->display = strcat(temp, "\n");
                     printf("%s", n->display);
+                    break;
                 }
-                break;
+                else if(!strcmp(input, "entry\n\0"))
+                {
+                    args[0] = "python3";
+                    args[1] = "jsonHandler.py";
+                    args[2] = NULL;
+
+                    entry_point(args);
+                }
+                else if(!strcmp(input, "graph\n\0"))
+                {
+                    args[0] = "python3";
+                    args[1] = "JsonPlotting.py";
+                    args[2] = NULL;
+
+                    entry_point(args);
+
+                }
+                else if(!strcmp(input, "help\n\0")) {
+                    printf("%s\n", first->display);
+                    break;
+                }
             }
             
             //Otherwise, moves on
@@ -327,15 +352,8 @@ int main(int argc, char** argv) {
             	n = n->next;
             }
         }
-
     }
 }
-
-void call_internal(char* command) {
-    //    switch(command):
-    //        case "help"
-}
-
 
 void entry_point(char** cmd) {
 
@@ -345,7 +363,7 @@ void entry_point(char** cmd) {
 
      //Child process
      if (childPID == 0) {
-          execvp(*cmd, cmd);
+          execvp(cmd[0], cmd);
           printf("Something went wrong with child process\n");
           perror("exec");
           exit(-1);
